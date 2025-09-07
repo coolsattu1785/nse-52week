@@ -2,11 +2,12 @@ name: NSE 52 Week High Fetcher
 
 on:
   schedule:
-    # Daily at 4 PM IST (10:30 UTC)
     - cron: "30 10 * * 1-5"
-    # Saturday at 10 AM IST (4:30 UTC)
     - cron: "30 4 * * 6"
   workflow_dispatch:
+
+permissions:
+  contents: write   # 👈 allow workflow to push code/files
 
 jobs:
   fetch:
@@ -14,6 +15,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}   # 👈 auth token
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -24,11 +27,11 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run daily fetch
-        if: github.event.schedule == '30 10 * * 1-5'
+        if: github.event_name == 'schedule' && github.event.schedule == '30 10 * * 1-5'
         run: python fetch_nse.py
 
       - name: Run weekly consolidation
-        if: github.event.schedule == '30 4 * * 6'
+        if: github.event_name == 'schedule' && github.event.schedule == '30 4 * * 6'
         run: python consolidate_weekly.py
 
       - name: Commit and push results
