@@ -1,11 +1,19 @@
 name: NSE 52 Week High Fetcher
 
 on:
+<<<<<<< HEAD
   #schedule:
     # Daily at 4 PM IST (10:30 UTC)
   #  - cron: "30 10 * * 1-5"
     # Saturday at 10 AM IST (4:30 UTC)
   #  - cron: "30 4 * * 6"
+=======
+#  schedule:
+    # Daily at 4 PM IST (10:30 UTC)
+#    - cron: "30 10 * * 1-5"
+    # Saturday at 10 AM IST (4:30 UTC)
+ #   - cron: "30 4 * * 6"
+>>>>>>> 7f65d2e66117282205e15d2ea96df0866400c196
     # Monday at 10 AM IST (4:30 UTC) - archive last week
 #    - cron: "30 4 * * 1"
   workflow_dispatch:
