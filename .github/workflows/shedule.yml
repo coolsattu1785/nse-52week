@@ -2,12 +2,16 @@ name: NSE 52 Week High Fetcher
 
 on:
   schedule:
+    # Daily at 4 PM IST (10:30 UTC)
     - cron: "30 10 * * 1-5"
+    # Saturday at 10 AM IST (4:30 UTC)
     - cron: "30 4 * * 6"
+    # Monday at 10 AM IST (4:30 UTC) - archive last week
+    - cron: "30 4 * * 1"
   workflow_dispatch:
 
 permissions:
-  contents: write   # 👈 allow workflow to push code/files
+  contents: write   # allow workflow to push results
 
 jobs:
   fetch:
@@ -16,7 +20,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}   # 👈 auth token
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -34,10 +38,20 @@ jobs:
         if: github.event_name == 'schedule' && github.event.schedule == '30 4 * * 6'
         run: python consolidate_weekly.py
 
+      - name: Archive last week (Monday only)
+        if: github.event_name == 'schedule' && github.event.schedule == '30 4 * * 1'
+        run: |
+          TODAY=$(date +'%Y-%m-%d')
+          ARCHIVE_DIR="archive/${TODAY}"
+          mkdir -p "$ARCHIVE_DIR"
+          mv data/*.csv "$ARCHIVE_DIR"/ || true
+          mv weekly/*.csv "$ARCHIVE_DIR"/ || true
+          echo "Archived last week's files into $ARCHIVE_DIR"
+
       - name: Commit and push results
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add data/*.csv weekly/*.csv || true
+          git add data/*.csv weekly/*.csv archive/* || true
           git commit -m "Auto-update NSE data" || echo "No changes to commit"
           git push
