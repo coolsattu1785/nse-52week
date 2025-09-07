@@ -1,0 +1,40 @@
+name: NSE 52 Week High Fetcher
+
+on:
+  schedule:
+    # Daily at 4 PM IST (10:30 UTC)
+    - cron: "30 10 * * 1-5"
+    # Saturday at 10 AM IST (4:30 UTC)
+    - cron: "30 4 * * 6"
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run daily fetch
+        if: github.event.schedule == '30 10 * * 1-5'
+        run: python fetch_nse.py
+
+      - name: Run weekly consolidation
+        if: github.event.schedule == '30 4 * * 6'
+        run: python consolidate_weekly.py
+
+      - name: Commit and push results
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data/*.csv weekly/*.csv || true
+          git commit -m "Auto-update NSE data" || echo "No changes to commit"
+          git push
