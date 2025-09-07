@@ -1,13 +1,13 @@
 name: NSE 52 Week High Fetcher
 
 on:
-  schedule:
+  #schedule:
     # Daily at 4 PM IST (10:30 UTC)
-    - cron: "30 10 * * 1-5"
+  #  - cron: "30 10 * * 1-5"
     # Saturday at 10 AM IST (4:30 UTC)
-    - cron: "30 4 * * 6"
+  #  - cron: "30 4 * * 6"
     # Monday at 10 AM IST (4:30 UTC) - archive last week
-    - cron: "30 4 * * 1"
+#    - cron: "30 4 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -35,7 +35,7 @@ jobs:
         run: python fetch_nse.py
 
       - name: Run weekly consolidation
-        if: github.event_name == 'schedule' && github.event.schedule == '30 4 * * 6'
+       # if: github.event_name == 'schedule' && github.event.schedule == '30 4 * * 6'
         run: python consolidate_weekly.py
 
       - name: Archive last week (Monday only)
