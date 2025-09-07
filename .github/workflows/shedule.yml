@@ -1,16 +1,14 @@
 name: NSE 52 Week High Fetcher
 
 on:
-
- # schedule:
+  schedule:
     # Daily at 4 PM IST (10:30 UTC)
- #   - cron: "30 10 * * 1-5"
+    - cron: "30 10 * * 1-5"
     # Saturday at 10 AM IST (4:30 UTC)
- #   - cron: "30 4 * * 6"
+    - cron: "30 4 * * 6"
     # Monday at 10 AM IST (4:30 UTC) - archive last week
- #   - cron: "30 4 * * 1"
-
-  workflow_dispatch:
+    - cron: "30 4 * * 1"
+  workflow_dispatch:   # 👈 manual trigger enabled
 
 permissions:
   contents: write   # allow workflow to push results
@@ -33,7 +31,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run daily fetch
-       # if: github.event_name == 'schedule' && github.event.schedule == '30 10 * * 1-5'
+        if: github.event_name == 'schedule' && github.event.schedule == '30 10 * * 1-5'
         run: python fetch_nse.py
 
       - name: Run weekly consolidation
@@ -56,4 +54,34 @@ jobs:
           git config user.email "actions@github.com"
           git add data/*.csv weekly/*.csv archive/* || true
           git commit -m "Auto-update NSE data" || echo "No changes to commit"
+          git push
+
+  test_run:   # 👈 New job for manual testing
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run both scripts (fetch + consolidate)
+        run: |
+          python fetch_nse.py
+          python consolidate_weekly.py
+
+      - name: Commit and push test results
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data/*.csv weekly/*.csv || true
+          git commit -m "Manual test run update" || echo "No changes to commit"
           git push
